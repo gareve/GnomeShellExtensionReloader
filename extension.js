@@ -175,11 +175,21 @@ const MyPopup = GObject.registerClass(
       this.menu.addMenuItem(extensionMenuItem);
 
       // Reload Extension
-      let reload = new PopupMenu.PopupMenuItem("Reload Extension!");
-      this.menu.addMenuItem(reload);
-      reload.connect("activate", () => {
+      let reloadButton = new PopupMenu.PopupMenuItem("Reload Extension!");
+      this.menu.addMenuItem(reloadButton);
+      reloadButton.connect("activate", () => {
         deleteAllVersionsOfExtension(uuid);
         installEphimeralExtension(uuid);
+      });
+
+      // Clean ephimeral Extensions
+      let deleteEphimeralVersions = new PopupMenu.PopupMenuItem(
+        "Delete Ephimeral Versions"
+      );
+      this.menu.addMenuItem(deleteEphimeralVersions);
+      deleteEphimeralVersions.connect("activate", () => {
+        deleteAllVersionsOfExtension(uuid);
+        Main.notify("All installed ephimeral versions were deleted");
       });
 
       // Preferences Button
