@@ -1,0 +1,11 @@
+{
+    "name" : "ExtensionReloader",
+    "description" : "Extension Reloader",
+    "shell-version" : [
+        "40",
+        "41"
+    ],
+    "url" : "",
+    "uuid" : "ExtensionReloader@gareve.github.io",
+    "version" : 1.0
+}

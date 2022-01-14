@@ -1,0 +1,10 @@
+<schemalist>
+  <schema id="org.gnome.shell.extensions.ExtensionReloader" path="/org/gnome/shell/extensions/ExtensionReloader/">
+    <key name="extension-path" type="s">
+      <default>"Select your extension folder"</default>
+      <summary>Folder path to the extension being developed</summary>
+      <description>
+      </description>
+    </key>    
+  </schema>
+</schemalist>
