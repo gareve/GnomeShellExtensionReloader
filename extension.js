@@ -150,17 +150,15 @@ const MyPopup = GObject.registerClass(
         .get_basename();
 
       let icon = new St.Icon({
-        icon_name: "view-refresh-symbolic", // /usr/share/icons
-        //   gicon : Gio.icon_new_for_string( Me.dir.get_path() + '/icon.svg' ),
+        icon_name: "view-refresh-symbolic",
         style_class: "system-status-icon",
       });
 
       this.add_child(icon);
 
-      // install extension
+      // Reload Extension
       let reload = new PopupMenu.PopupMenuItem("Reload Extension!");
       this.menu.addMenuItem(reload);
-
       reload.connect("activate", () => {
         deleteAllVersionsOfExtension(uuid);
         installEphimeralExtension(uuid);
@@ -175,13 +173,13 @@ const MyPopup = GObject.registerClass(
 
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-      // Extension Name
-      let extensionMenuItem = new PopupMenu.PopupMenuItem(
-        Gio.File.new_for_path(settings.get_string("extension-path"))
-          .get_parent()
-          .get_basename(),
-        { reactive: false, activate: false, hover: false, can_focus: false }
-      );
+      // Extension Label
+      let extensionMenuItem = new PopupMenu.PopupMenuItem(uuid, {
+        reactive: false,
+        activate: false,
+        hover: false,
+        can_focus: false,
+      });
       this.menu.addMenuItem(extensionMenuItem);
       settings.connect(`changed::extension-path`, () => {
         extensionMenuItem.label.set_text(
