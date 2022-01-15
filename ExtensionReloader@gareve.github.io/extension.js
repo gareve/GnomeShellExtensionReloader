@@ -71,9 +71,6 @@ function deleteAllVersionsOfExtension(uuid) {
     }
 
     Main.extensionManager.unloadExtension(extension);
-    const extensionFolderFile = Gio.File.new_for_path(
-      GLib.build_filenamev([global.userdatadir, "extensions", i_uuid])
-    );
     execCMD([
       "/usr/bin/rm",
       "-rf",
@@ -108,11 +105,11 @@ function installEphimeralExtension(uuid) {
   // Modifying metadata.json
   // TODO: Error handling
   const metadataFile = ephExtensionDir.get_child("metadata.json");
-  const [success_, metadataContents] = metadataFile.load_contents(null);
+  const [, metadataContents] = metadataFile.load_contents(null);
   const meta = JSON.parse(ByteArray.toString(metadataContents));
   meta.uuid = ephUUID;
   meta.name += " eph_" + nowTimestamp;
-  let [success, tag] = metadataFile.replace_contents(
+  metadataFile.replace_contents(
     JSON.stringify(meta),
     null,
     false,
@@ -123,7 +120,7 @@ function installEphimeralExtension(uuid) {
   let extension = manager.createExtensionObject(
     ephUUID,
     ephExtensionDir,
-    ExtensionUtils.ExtensionType.PER_USER
+    ExtensionType.PER_USER
   );
 
   try {
@@ -229,13 +226,16 @@ const MyPopup = GObject.registerClass(
   }
 );
 
+// eslint-disable-next-line no-unused-vars
 function init() {}
 
+// eslint-disable-next-line no-unused-vars
 function enable() {
   myPopup = new MyPopup();
   Main.panel.addToStatusArea("ReloadExtensionPopup", myPopup, 1);
 }
 
+// eslint-disable-next-line no-unused-vars
 function disable() {
   myPopup.destroy();
 }

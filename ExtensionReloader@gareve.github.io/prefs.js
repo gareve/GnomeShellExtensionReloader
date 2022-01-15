@@ -1,7 +1,5 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Gdk = imports.gi.Gdk;
-const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -77,8 +75,10 @@ var HelloWorldSettings = GObject.registerClass(
   }
 );
 
+// eslint-disable-next-line no-unused-vars
 function init() {}
 
+// eslint-disable-next-line no-unused-vars
 function buildPrefsWidget() {
   return new HelloWorldSettings();
 }
