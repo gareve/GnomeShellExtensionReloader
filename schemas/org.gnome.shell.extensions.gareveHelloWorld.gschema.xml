@@ -1,8 +1,8 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.ExtensionReloader" path="/org/gnome/shell/extensions/ExtensionReloader/">
-    <key name="extension-path" type="s">
-      <default>"Select your extension folder"</default>
-      <summary>Folder path to the extension being developed</summary>
+    <key name="extension-metadata-path" type="s">
+      <default>"Select your extension metadata.json file"</default>
+      <summary>Every extension has a metadata.json file. Please select yours</summary>
       <description>
       </description>
     </key>    

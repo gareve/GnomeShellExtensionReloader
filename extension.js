@@ -89,7 +89,7 @@ function installEphimeralExtension(uuid) {
 
   const cmd =
     "cp -r " +
-    Gio.File.new_for_path(settings.get_string("extension-path"))
+    Gio.File.new_for_path(settings.get_string("extension-metadata-path"))
       .get_parent()
       .get_path() +
     " " +
@@ -147,9 +147,15 @@ const MyPopup = GObject.registerClass(
       super._init(0);
 
       const settings = getSettings();
-      const uuid = Gio.File.new_for_path(settings.get_string("extension-path"))
-        .get_parent()
-        .get_basename();
+      let extensionMetadataFile = Gio.File.new_for_path(
+        settings.get_string("extension-metadata-path")
+      );
+      let uuid = extensionMetadataFile.get_parent().get_basename();
+      let extensionExists = extensionMetadataFile.query_exists(null);
+
+      if (!extensionExists) {
+        uuid = "Please select a valid metadata.json file on the preferences";
+      }
 
       let icon = new St.Icon({
         icon_name: "view-refresh-symbolic",
@@ -161,16 +167,6 @@ const MyPopup = GObject.registerClass(
       // Extension Label
       let extensionMenuItem = new PopupMenu.PopupMenuItem(uuid, {
         reactive: false,
-        activate: false,
-        hover: false,
-        can_focus: false,
-      });
-      settings.connect(`changed::extension-path`, () => {
-        extensionMenuItem.label.set_text(
-          Gio.File.new_for_path(settings.get_string("extension-path"))
-            .get_parent()
-            .get_basename()
-        );
       });
       this.menu.addMenuItem(extensionMenuItem);
 
@@ -183,14 +179,19 @@ const MyPopup = GObject.registerClass(
       });
 
       // Clean ephimeral Extensions
-      let deleteEphimeralVersions = new PopupMenu.PopupMenuItem(
+      let deleteButton = new PopupMenu.PopupMenuItem(
         "Delete Ephimeral Versions"
       );
-      this.menu.addMenuItem(deleteEphimeralVersions);
-      deleteEphimeralVersions.connect("activate", () => {
+      this.menu.addMenuItem(deleteButton);
+      deleteButton.connect("activate", () => {
         deleteAllVersionsOfExtension(uuid);
         Main.notify("All installed ephimeral versions were deleted");
       });
+
+      if (!extensionExists) {
+        deleteButton.reactive = false;
+        reloadButton.reactive = false;
+      }
 
       // Preferences Button
       let prefButton = new PopupMenu.PopupMenuItem("Preferences");
@@ -200,6 +201,21 @@ const MyPopup = GObject.registerClass(
       });
 
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+      // Subscribe to changes in prefs
+      settings.connect(`changed::extension-metadata-path`, () => {
+        extensionMetadataFile = Gio.File.new_for_path(
+          settings.get_string("extension-metadata-path")
+        );
+        uuid = extensionMetadataFile.get_parent().get_basename();
+        extensionExists = extensionMetadataFile.query_exists(null);
+
+        extensionMenuItem.label.set_text(
+          extensionMetadataFile.get_parent().get_basename()
+        );
+        deleteButton.reactive = extensionExists;
+        reloadButton.reactive = extensionExists;
+      });
     }
   }
 );

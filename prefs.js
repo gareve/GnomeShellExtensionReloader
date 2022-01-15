@@ -45,7 +45,7 @@ var HelloWorldSettings = GObject.registerClass(
       );
 
       const logoPicker = new Gtk.Button({
-        label: settings.get_string("extension-path"),
+        label: settings.get_string("extension-metadata-path"),
       });
       const fileChooser = new Gtk.FileChooserNative({
         title: "Select an Image",
@@ -63,7 +63,7 @@ var HelloWorldSettings = GObject.registerClass(
         if (response === Gtk.ResponseType.ACCEPT) {
           const new_path = dlg.get_file().get_path();
           logoPicker.label = new_path;
-          settings.set_string("extension-path", new_path);
+          settings.set_string("extension-metadata-path", new_path);
         }
         dlg.hide();
       });
