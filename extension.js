@@ -45,9 +45,16 @@ function getSettings() {
   return new Gio.Settings({ settings_schema: schemaObj });
 }
 
-function runMyShell(cmd) {
-  log(">>>>>> RUNNING CMD: " + cmd);
-  let [, stdout, stderr, status] = GLib.spawn_command_line_sync(cmd);
+function execCMD(args) {
+  log(">>>>>> RUNNING CMD: " + JSON.stringify(args));
+  let [ok, stdout, stderr, status] = GLib.spawn_sync(
+    null,
+    args,
+    null,
+    null,
+    null
+  );
+  log(">>>>>> OK?: " + ok);
   log(">>>>>> STDOUT: " + stdout);
   log(">>>>>> STDERR: " + stderr);
   log(">>>>>> STATUS: " + status);
@@ -63,14 +70,15 @@ function deleteAllVersionsOfExtension(uuid) {
       continue;
     }
 
-    const extensionPath = GLib.build_filenamev([
-      global.userdatadir,
-      "extensions",
-      i_uuid,
-    ]);
-
     Main.extensionManager.unloadExtension(extension);
-    runMyShell("rm -rf " + extensionPath);
+    const extensionFolderFile = Gio.File.new_for_path(
+      GLib.build_filenamev([global.userdatadir, "extensions", i_uuid])
+    );
+    execCMD([
+      "/usr/bin/rm",
+      "-rf",
+      GLib.build_filenamev([global.userdatadir, "extensions", i_uuid]),
+    ]);
   }
 }
 
@@ -87,14 +95,15 @@ function installEphimeralExtension(uuid) {
   ]);
   const ephExtensionDir = Gio.File.new_for_path(ephExtensionPath);
 
-  const cmd =
-    "cp -r " +
+  // Copy extension to installation path with ephimeral UUID
+  execCMD([
+    "/usr/bin/cp",
+    "-r",
     Gio.File.new_for_path(settings.get_string("extension-metadata-path"))
       .get_parent()
-      .get_path() +
-    " " +
-    ephExtensionPath;
-  runMyShell(cmd);
+      .get_path(),
+    ephExtensionPath,
+  ]);
 
   // Modifying metadata.json
   // TODO: Error handling
