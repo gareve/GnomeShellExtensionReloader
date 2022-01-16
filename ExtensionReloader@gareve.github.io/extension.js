@@ -175,9 +175,13 @@ const MyPopup = GObject.registerClass(
         reactive: false,
       });
       this.menu.addMenuItem(extensionMenuItem);
+      this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       // Reload Extension
-      let reloadButton = new PopupMenu.PopupMenuItem("Reload Extension!");
+      let reloadButton = new PopupMenu.PopupImageMenuItem(
+        "Reload Extension!",
+        "view-refresh-symbolic"
+      );
       this.menu.addMenuItem(reloadButton);
       reloadButton.connect("activate", () => {
         deleteAllVersionsOfExtension(uuid);
@@ -185,8 +189,9 @@ const MyPopup = GObject.registerClass(
       });
 
       // Clean ephimeral Extensions
-      let deleteButton = new PopupMenu.PopupMenuItem(
-        "Delete Ephimeral Versions"
+      let deleteButton = new PopupMenu.PopupImageMenuItem(
+        "Delete Ephimeral Versions",
+        "edit-delete-symbolic"
       );
       this.menu.addMenuItem(deleteButton);
       deleteButton.connect("activate", () => {
@@ -200,7 +205,10 @@ const MyPopup = GObject.registerClass(
       }
 
       // Preferences Button
-      let prefButton = new PopupMenu.PopupMenuItem("Preferences");
+      let prefButton = new PopupMenu.PopupImageMenuItem(
+        "Preferences",
+        "system-run-symbolic"
+      );
       this.menu.addMenuItem(prefButton);
       prefButton.connect("activate", () => {
         ExtensionUtils.openPrefs();
