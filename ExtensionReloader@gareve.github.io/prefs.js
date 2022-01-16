@@ -1,10 +1,8 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
-const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
 
 const USER_INSTALLATION_PATH = GLib.build_filenamev([
   GLib.get_user_data_dir(),
@@ -12,29 +10,14 @@ const USER_INSTALLATION_PATH = GLib.build_filenamev([
   "extensions",
 ]);
 
-function getSettings() {
-  let GioSSS = Gio.SettingsSchemaSource;
-  let schemaSource = GioSSS.new_from_directory(
-    Me.dir.get_child("schemas").get_path(),
-    GioSSS.get_default(),
-    false
-  );
-  let schemaObj = schemaSource.lookup(
-    "org.gnome.shell.extensions.ExtensionReloader",
-    true
-  );
-  if (!schemaObj) {
-    throw new Error("cannot find schemas");
-  }
-  return new Gio.Settings({ settings_schema: schemaObj });
-}
-
 var HelloWorldSettings = GObject.registerClass(
   { GTypeName: "Gjs_HelloWorldSettings" + Date.now() },
   class HelloWorldSettings extends Gtk.ListBox {
     _init(params) {
       super._init(params);
-      const settings = getSettings();
+      const settings = ExtensionUtils.getSettings(
+        "org.gnome.shell.extensions.ExtensionReloader"
+      );
 
       this.connect("row-activated", (widget, row) => {
         this._rowActivated(widget, row);

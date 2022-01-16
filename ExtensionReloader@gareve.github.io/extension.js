@@ -19,7 +19,6 @@ const GObject = imports.gi.GObject;
 const Gio = imports.gi.Gio;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 const ByteArray = imports.byteArray;
 
 const GLib = imports.gi.GLib;
@@ -27,23 +26,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const { ExtensionType } = ExtensionUtils;
 
 let myPopup;
-
-function getSettings() {
-  let GioSSS = Gio.SettingsSchemaSource;
-  let schemaSource = GioSSS.new_from_directory(
-    Me.dir.get_child("schemas").get_path(),
-    GioSSS.get_default(),
-    false
-  );
-  let schemaObj = schemaSource.lookup(
-    "org.gnome.shell.extensions.ExtensionReloader",
-    true
-  );
-  if (!schemaObj) {
-    throw new Error("cannot find schemas");
-  }
-  return new Gio.Settings({ settings_schema: schemaObj });
-}
 
 function execCMD(args) {
   log(">>>>>> RUNNING CMD: " + JSON.stringify(args));
@@ -81,7 +63,9 @@ function deleteAllVersionsOfExtension(uuid) {
 
 function installEphimeralExtension(uuid) {
   // based on https://stackoverflow.com/questions/62265594/gnome-shell-extension-install-possible-without-restart
-  const settings = getSettings();
+  const settings = ExtensionUtils.getSettings(
+    "org.gnome.shell.extensions.ExtensionReloader"
+  );
   const manager = Main.extensionManager;
   const nowTimestamp = Date.now();
   const ephUUID = uuid + "_eph_" + nowTimestamp;
@@ -152,7 +136,9 @@ const MyPopup = GObject.registerClass(
     _init() {
       super._init(0);
 
-      const settings = getSettings();
+      const settings = ExtensionUtils.getSettings(
+        "org.gnome.shell.extensions.ExtensionReloader"
+      );
       let extensionMetadataFile = Gio.File.new_for_path(
         settings.get_string("extension-metadata-path")
       );
