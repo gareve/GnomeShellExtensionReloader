@@ -20,6 +20,8 @@ const Gio = imports.gi.Gio;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const ByteArray = imports.byteArray;
+const Meta = imports.gi.Meta;
+const Shell = imports.gi.Shell;
 
 const GLib = imports.gi.GLib;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -42,7 +44,18 @@ function execCMD(args) {
   log(">>>>>> STATUS: " + status);
 }
 
-function deleteAllVersionsOfExtension(uuid) {
+function getNewestUUIDFromSettings() {
+  const settings = ExtensionUtils.getSettings(
+    "org.gnome.shell.extensions.ExtensionReloader"
+  );
+  let extensionMetadataFile = Gio.File.new_for_path(
+    settings.get_string("extension-metadata-path")
+  );
+  return extensionMetadataFile.get_parent().get_basename();
+}
+
+function deleteAllVersionsOfExtension() {
+  const uuid = getNewestUUIDFromSettings();
   for (let i_uuid of Main.extensionManager.getUuids()) {
     if (!i_uuid.startsWith(uuid)) {
       continue;
@@ -61,7 +74,8 @@ function deleteAllVersionsOfExtension(uuid) {
   }
 }
 
-function installEphimeralExtension(uuid) {
+function installEphimeralExtension() {
+  const uuid = getNewestUUIDFromSettings();
   // based on https://stackoverflow.com/questions/62265594/gnome-shell-extension-install-possible-without-restart
   const settings = ExtensionUtils.getSettings(
     "org.gnome.shell.extensions.ExtensionReloader"
@@ -131,6 +145,11 @@ function installEphimeralExtension(uuid) {
   }
 }
 
+function cleanExtensionReload() {
+  deleteAllVersionsOfExtension();
+  installEphimeralExtension();
+}
+
 const MyPopup = GObject.registerClass(
   class MyPopup extends PanelMenu.Button {
     _init() {
@@ -170,8 +189,7 @@ const MyPopup = GObject.registerClass(
       );
       this.menu.addMenuItem(reloadButton);
       reloadButton.connect("activate", () => {
-        deleteAllVersionsOfExtension(uuid);
-        installEphimeralExtension(uuid);
+        cleanExtensionReload(uuid);
       });
 
       // Clean ephimeral Extensions
@@ -207,7 +225,6 @@ const MyPopup = GObject.registerClass(
         extensionMetadataFile = Gio.File.new_for_path(
           settings.get_string("extension-metadata-path")
         );
-        uuid = extensionMetadataFile.get_parent().get_basename();
         extensionExists = extensionMetadataFile.query_exists(null);
 
         extensionMenuItem.label.set_text(
@@ -216,6 +233,17 @@ const MyPopup = GObject.registerClass(
         deleteButton.reactive = extensionExists;
         reloadButton.reactive = extensionExists;
       });
+
+      // Keybinding
+      Main.wm.addKeybinding(
+        "reload-extension-hotkey",
+        settings,
+        Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+        Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+        () => {
+          cleanExtensionReload();
+        }
+      );
     }
   }
 );
@@ -231,5 +259,6 @@ function enable() {
 
 // eslint-disable-next-line no-unused-vars
 function disable() {
+  Main.wm.removeKeybinding("reload-extension-hotkey");
   myPopup.destroy();
 }

@@ -67,6 +67,7 @@ var HelloWorldSettings = GObject.registerClass(
             errorMessage.set_markup(
               `<span foreground="red">
                   <span> <b>ERROR: Extension path should be outside the local extension installation path</b></span>
+                  <span> <b>SETTING WAS NOT SAVED</b></span>
                   <span><tt>Selected File Path : ${new_path} </tt></span>
                   <span><tt>User extension Path: ${USER_INSTALLATION_PATH}</tt></span>
                 </span>`
