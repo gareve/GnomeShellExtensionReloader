@@ -1,9 +1,16 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+
+const USER_INSTALLATION_PATH = GLib.build_filenamev([
+  GLib.get_user_data_dir(),
+  "gnome-shell",
+  "extensions",
+]);
 
 function getSettings() {
   let GioSSS = Gio.SettingsSchemaSource;
@@ -36,7 +43,7 @@ var HelloWorldSettings = GObject.registerClass(
       this.append(
         new Gtk.Label({
           label:
-            "File path of your extension's metadata. Should be outside the installation path",
+            "File path of your extension's metadata. It should be outside the installation path",
           halign: Gtk.Align.START,
           hexpand: true,
         })
@@ -45,6 +52,8 @@ var HelloWorldSettings = GObject.registerClass(
       const logoPicker = new Gtk.Button({
         label: settings.get_string("extension-metadata-path"),
       });
+      this.append(logoPicker);
+
       const fileChooser = new Gtk.FileChooserNative({
         title: "Select an Image",
         action: Gtk.FileChooserAction.OPEN,
@@ -56,12 +65,33 @@ var HelloWorldSettings = GObject.registerClass(
       filter.add_pattern("metadata.json");
       fileChooser.add_filter(filter);
 
+      const errorMessage = new Gtk.Label({
+        useMarkup: true,
+        label: "",
+        halign: Gtk.Align.START,
+        hexpand: true,
+      });
+      this.append(errorMessage);
+
       // Verify folder contains an actual extension
       fileChooser.connect("response", (dlg, response) => {
+        errorMessage.set_markup("");
         if (response === Gtk.ResponseType.ACCEPT) {
           const new_path = dlg.get_file().get_path();
-          logoPicker.label = new_path;
-          settings.set_string("extension-metadata-path", new_path);
+          const is_invalid_path = new_path.startsWith(USER_INSTALLATION_PATH);
+
+          if (is_invalid_path) {
+            errorMessage.set_markup(
+              `<span foreground="red">
+                  <span> <b>ERROR: Extension path should be outside the local extension installation path</b></span>
+                  <span><tt>Selected File Path : ${new_path} </tt></span>
+                  <span><tt>User extension Path: ${USER_INSTALLATION_PATH}</tt></span>
+                </span>`
+            );
+          } else {
+            logoPicker.label = new_path;
+            settings.set_string("extension-metadata-path", new_path);
+          }
         }
         dlg.hide();
       });
@@ -70,7 +100,6 @@ var HelloWorldSettings = GObject.registerClass(
         fileChooser.transient_for = this.get_root();
         fileChooser.show();
       });
-      this.append(logoPicker);
     }
   }
 );
