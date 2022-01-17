@@ -184,7 +184,9 @@ const MyPopup = GObject.registerClass(
 
       // Reload Extension
       let reloadButton = new PopupMenu.PopupImageMenuItem(
-        "Reload Extension!",
+        "Reload Extension! (" +
+          settings.get_strv("reload-extension-hotkey") +
+          ")",
         "view-refresh-symbolic"
       );
       this.menu.addMenuItem(reloadButton);
