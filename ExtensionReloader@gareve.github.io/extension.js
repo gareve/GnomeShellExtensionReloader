@@ -57,6 +57,7 @@ function getNewestUUIDFromSettings() {
 }
 
 function deleteAllVersionsOfExtension() {
+  Utils.log("deleteAllVersionsOfExtension");
   const uuid = getNewestUUIDFromSettings();
   for (let i_uuid of Main.extensionManager.getUuids()) {
     if (!i_uuid.startsWith(uuid)) {
@@ -77,6 +78,7 @@ function deleteAllVersionsOfExtension() {
 }
 
 function installEphimeralExtension() {
+  Utils.log("installEphimeralExtension");
   const uuid = getNewestUUIDFromSettings();
   // based on https://stackoverflow.com/questions/62265594/gnome-shell-extension-install-possible-without-restart
   const settings = ExtensionUtils.getSettings(
@@ -150,6 +152,7 @@ function installEphimeralExtension() {
 }
 
 function cleanExtensionReload() {
+  Utils.log("cleanExtensionReload");
   deleteAllVersionsOfExtension();
   installEphimeralExtension();
 }
