@@ -25,6 +25,14 @@ var HelloWorldSettings = GObject.registerClass(
 
       this.append(
         new Gtk.Label({
+          useMarkup: true,
+          label:
+            "<b>Source Code and additional Documentation on: <a href='https://github.com/gareve/GnomeShellExtensionReloader'>https://github.com/gareve/GnomeShellExtensionReloader</a></b>",
+        })
+      );
+
+      this.append(
+        new Gtk.Label({
           label:
             "File path of your extension's metadata. It should be outside the installation path",
           halign: Gtk.Align.START,
