@@ -1,32 +1,20 @@
 /*
 Reload extension with: 
-env GNOME_SHELL_SLOWDOWN_FACTOR=2 MUTTER_DEBUG_DUMMY_MODE_SPECS=1024x768 dbus-run-session -- gnome-shell --nested --wayland | grep Gareve
-log('>>>>>>>>>>>>> enable');
-Main.notify('Gareve Notification', 'Cuack');
-
-https://gjs-docs.gnome.org/
-https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/extensionSystem.js
-https://gitlab.gnome.org/GNOME/gjs/-/blob/master/gjs/importer.cpp
-
-https://codeberg.org/som/ExtensionReloader/src/branch/face/extension.js
+env GNOME_SHELL_SLOWDOWN_FACTOR=2 MUTTER_DEBUG_DUMMY_MODE_SPECS=1024x768 dbus-run-session -- gnome-shell --nested --wayland
 */
 
 "use strict";
 
+const { St, GObject, Gio, Meta, Shell, GLib } = imports.gi;
+
 const Main = imports.ui.main;
-const St = imports.gi.St;
-const GObject = imports.gi.GObject;
-const Gio = imports.gi.Gio;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const ByteArray = imports.byteArray;
-const Meta = imports.gi.Meta;
-const Shell = imports.gi.Shell;
 
-const GLib = imports.gi.GLib;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils.Utils;
+const { Utils, SCHEMA_PATH_KEY } = Me.imports.utils;
 const { ExtensionType } = ExtensionUtils;
 
 let myPopup;
@@ -51,7 +39,7 @@ function getNewestUUIDFromSettings() {
     "org.gnome.shell.extensions.ExtensionReloader"
   );
   let extensionMetadataFile = Gio.File.new_for_path(
-    settings.get_string("extension-metadata-path")
+    settings.get_string(SCHEMA_PATH_KEY)
   );
   return extensionMetadataFile.get_parent().get_basename();
 }
@@ -59,11 +47,11 @@ function getNewestUUIDFromSettings() {
 function deleteAllVersionsOfExtension() {
   Utils.log("START deleteAllVersionsOfExtension");
   const uuid = getNewestUUIDFromSettings();
-  for (let i_uuid of Main.extensionManager.getUuids()) {
-    if (!i_uuid.startsWith(uuid)) {
+  for (let iUUID of Main.extensionManager.getUuids()) {
+    if (!iUUID.startsWith(uuid)) {
       continue;
     }
-    let extension = Main.extensionManager.lookup(i_uuid);
+    let extension = Main.extensionManager.lookup(iUUID);
     if (!extension || extension.type !== ExtensionType.PER_USER) {
       continue;
     }
@@ -72,7 +60,7 @@ function deleteAllVersionsOfExtension() {
     execCMD([
       "/usr/bin/rm",
       "-rf",
-      GLib.build_filenamev([global.userdatadir, "extensions", i_uuid]),
+      GLib.build_filenamev([global.userdatadir, "extensions", iUUID]),
     ]);
   }
 }
@@ -98,14 +86,13 @@ function installEphimeralExtension() {
   execCMD([
     "/usr/bin/cp",
     "-r",
-    Gio.File.new_for_path(settings.get_string("extension-metadata-path"))
+    Gio.File.new_for_path(settings.get_string(SCHEMA_PATH_KEY))
       .get_parent()
       .get_path(),
     ephExtensionPath,
   ]);
 
   // Modifying metadata.json
-  // TODO: Error handling
   const metadataFile = ephExtensionDir.get_child("metadata.json");
   const [, metadataContents] = metadataFile.load_contents(null);
   const meta = JSON.parse(ByteArray.toString(metadataContents));
@@ -136,18 +123,19 @@ function installEphimeralExtension() {
       "Old Extension deleted & new Ephimeral Extension installed",
       ephUUID
     );
+    Utils.log("Successful Installation of Ephimeral Extension");
   } catch (e) {
     let extension = Main.extensionManager.lookup(ephUUID);
     if (extension) {
       Main.extensionManager.unloadExtension(extension);
     }
-    const error_message = "Error while installing %s: %s (%s)".format(
+    const errorMessage = "Error while installing %s: %s (%s)".format(
       ephUUID,
       "LoadExtensionError",
       e
     );
-    Utils.log(error_message);
-    throw new Error(error_message);
+    Utils.log(errorMessage);
+    throw new Error(errorMessage);
   }
 }
 
@@ -168,7 +156,7 @@ const MyPopup = GObject.registerClass(
         "org.gnome.shell.extensions.ExtensionReloader"
       );
       let extensionMetadataFile = Gio.File.new_for_path(
-        settings.get_string("extension-metadata-path")
+        settings.get_string(SCHEMA_PATH_KEY)
       );
       let uuid = extensionMetadataFile.get_parent().get_basename();
       let extensionExists = extensionMetadataFile.query_exists(null);
@@ -243,10 +231,10 @@ const MyPopup = GObject.registerClass(
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
       // Subscribe to changes in prefs
-      settings.connect(`changed::extension-metadata-path`, () => {
+      settings.connect(`changed::${SCHEMA_PATH_KEY}`, () => {
         Utils.log("Settings updated. Refreshing UI");
         extensionMetadataFile = Gio.File.new_for_path(
-          settings.get_string("extension-metadata-path")
+          settings.get_string(SCHEMA_PATH_KEY)
         );
         extensionExists = extensionMetadataFile.query_exists(null);
 

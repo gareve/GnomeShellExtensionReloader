@@ -8,6 +8,8 @@
         "ecmaVersion": 13
     },
     "rules": {
+        "camelcase":"warn",
+        "camelcase/ignoreDestructuring": "true"
     },
     "globals": {
         "imports": "readonly",

@@ -1,11 +1,9 @@
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const GLib = imports.gi.GLib;
+const { GObject, Gtk, GLib } = imports.gi;
 const ByteArray = imports.byteArray;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils.Utils;
+const { Utils, SCHEMA_PATH_KEY } = Me.imports.utils;
 
 const USER_INSTALLATION_PATH = GLib.build_filenamev([
   GLib.get_user_data_dir(),
@@ -13,8 +11,8 @@ const USER_INSTALLATION_PATH = GLib.build_filenamev([
   "extensions",
 ]);
 
-var HelloWorldSettings = GObject.registerClass(
-  { GTypeName: "Gjs_HelloWorldSettings" + Date.now() },
+const HelloWorldSettings = GObject.registerClass(
+  { GTypeName: "Gjs_HelloWorldSettings" },
   class HelloWorldSettings extends Gtk.ListBox {
     _init(params) {
       super._init(params);
@@ -23,11 +21,13 @@ var HelloWorldSettings = GObject.registerClass(
       );
       Utils.log("Opening preferences");
 
+      const extensionWebsite = Me.metadata.url;
       this.append(
         new Gtk.Label({
           useMarkup: true,
-          label:
-            "<b>Source Code and additional Documentation on: <a href='https://github.com/gareve/GnomeShellExtensionReloader'>https://github.com/gareve/GnomeShellExtensionReloader</a></b>",
+          label: `<b>Source Code and additional Documentation on: 
+            <a href='${extensionWebsite}'>${extensionWebsite}</a>
+          </b>`,
         })
       );
 
@@ -41,7 +41,7 @@ var HelloWorldSettings = GObject.registerClass(
       );
 
       const logoPicker = new Gtk.Button({
-        label: settings.get_string("extension-metadata-path"),
+        label: settings.get_string(SCHEMA_PATH_KEY),
       });
       this.append(logoPicker);
 
@@ -68,25 +68,25 @@ var HelloWorldSettings = GObject.registerClass(
       fileChooser.connect("response", (dlg, response) => {
         errorMessage.set_markup("");
         if (response === Gtk.ResponseType.ACCEPT) {
-          const new_path = dlg.get_file().get_path();
-          const is_invalid_path = new_path.startsWith(USER_INSTALLATION_PATH);
+          const newPath = dlg.get_file().get_path();
+          const isInvalidPath = newPath.startsWith(USER_INSTALLATION_PATH);
 
-          if (is_invalid_path) {
+          if (isInvalidPath) {
             errorMessage.set_markup(
               `<span foreground="red">
                   <span> <b>ERROR: Extension path should be outside the local extension installation path</b></span>
                   <span> <b>SETTING WAS NOT SAVED</b></span>
-                  <span><tt>Selected File Path : ${new_path} </tt></span>
+                  <span><tt>Selected File Path : ${newPath} </tt></span>
                   <span><tt>User extension Path: ${USER_INSTALLATION_PATH}</tt></span>
                 </span>`
             );
             Utils.log(
-              `Selected path(${new_path}) is inside installation path(${USER_INSTALLATION_PATH})`
+              `Selected path(${newPath}) is inside installation path(${USER_INSTALLATION_PATH})`
             );
           } else {
-            logoPicker.label = new_path;
-            settings.set_string("extension-metadata-path", new_path);
-            Utils.log(`New Extension selected: ${new_path}`);
+            logoPicker.label = newPath;
+            settings.set_string(SCHEMA_PATH_KEY, newPath);
+            Utils.log(`New Extension selected: ${newPath}`);
           }
         }
         dlg.hide();
@@ -128,7 +128,7 @@ var HelloWorldSettings = GObject.registerClass(
         [
           "/bin/bash",
           "-c",
-          'journalctl --since "60 minutes ago" --output=cat --no-pager | grep "_EXTENSION_RELOADER_"',
+          'journalctl --since "120 minutes ago" --output=cat --no-pager | grep "_EXTENSION_RELOADER_"',
         ],
         null,
         GLib.SpawnFlags.SEARCH_PATH,
