@@ -57,7 +57,7 @@ function getNewestUUIDFromSettings() {
 }
 
 function deleteAllVersionsOfExtension() {
-  Utils.log("deleteAllVersionsOfExtension");
+  Utils.log("START deleteAllVersionsOfExtension");
   const uuid = getNewestUUIDFromSettings();
   for (let i_uuid of Main.extensionManager.getUuids()) {
     if (!i_uuid.startsWith(uuid)) {
@@ -78,7 +78,7 @@ function deleteAllVersionsOfExtension() {
 }
 
 function installEphimeralExtension() {
-  Utils.log("installEphimeralExtension");
+  Utils.log("START installEphimeralExtension");
   const uuid = getNewestUUIDFromSettings();
   // based on https://stackoverflow.com/questions/62265594/gnome-shell-extension-install-possible-without-restart
   const settings = ExtensionUtils.getSettings(
@@ -152,7 +152,7 @@ function installEphimeralExtension() {
 }
 
 function cleanExtensionReload() {
-  Utils.log("cleanExtensionReload");
+  Utils.log("START cleanExtensionReload");
   deleteAllVersionsOfExtension();
   installEphimeralExtension();
 }
@@ -161,7 +161,8 @@ const MyPopup = GObject.registerClass(
   class MyPopup extends PanelMenu.Button {
     _init() {
       super._init(0);
-      Utils.log("Starting Extension\na\nb");
+      const isWayland = Meta.is_wayland_compositor();
+      Utils.log("Starting Extension! is_wayland=" + isWayland);
 
       const settings = ExtensionUtils.getSettings(
         "org.gnome.shell.extensions.ExtensionReloader"
@@ -172,10 +173,6 @@ const MyPopup = GObject.registerClass(
       let uuid = extensionMetadataFile.get_parent().get_basename();
       let extensionExists = extensionMetadataFile.query_exists(null);
 
-      if (!extensionExists) {
-        uuid = "Please select a valid metadata.json file on the preferences";
-      }
-
       let icon = new St.Icon({
         icon_name: "view-refresh-symbolic",
         style_class: "system-status-icon",
@@ -183,12 +180,27 @@ const MyPopup = GObject.registerClass(
 
       this.add_child(icon);
 
+      // Validations
+      if (!extensionExists) {
+        uuid = "Please select a valid metadata.json file on the preferences";
+        Utils.log("No valid metadata.json found");
+      }
+      if (!isWayland) {
+        uuid =
+          "ExtensionReloader was made for Wayland. Just run Alt+F2 'r' to restart on X-Server";
+      }
+
       // Extension Label
       let extensionMenuItem = new PopupMenu.PopupMenuItem(uuid, {
         reactive: false,
       });
       this.menu.addMenuItem(extensionMenuItem);
       this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+      if (!isWayland) {
+        Utils.log("Not running wayland. Displaying error and leaving");
+        return;
+      }
 
       // Reload Extension
       let reloadButton = new PopupMenu.PopupImageMenuItem(
@@ -232,6 +244,7 @@ const MyPopup = GObject.registerClass(
 
       // Subscribe to changes in prefs
       settings.connect(`changed::extension-metadata-path`, () => {
+        Utils.log("Settings updated. Refreshing UI");
         extensionMetadataFile = Gio.File.new_for_path(
           settings.get_string("extension-metadata-path")
         );
@@ -251,6 +264,7 @@ const MyPopup = GObject.registerClass(
         Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
         Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
         () => {
+          Utils.log("Shortcut used. Reloading Extension");
           cleanExtensionReload();
         }
       );
