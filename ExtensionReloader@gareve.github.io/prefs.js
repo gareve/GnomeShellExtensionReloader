@@ -1,8 +1,11 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const GLib = imports.gi.GLib;
+const ByteArray = imports.byteArray;
 
 const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils.Utils;
 
 const USER_INSTALLATION_PATH = GLib.build_filenamev([
   GLib.get_user_data_dir(),
@@ -18,10 +21,7 @@ var HelloWorldSettings = GObject.registerClass(
       const settings = ExtensionUtils.getSettings(
         "org.gnome.shell.extensions.ExtensionReloader"
       );
-
-      this.connect("row-activated", (widget, row) => {
-        this._rowActivated(widget, row);
-      });
+      Utils.log("Opening preferences");
 
       this.append(
         new Gtk.Label({
@@ -45,7 +45,7 @@ var HelloWorldSettings = GObject.registerClass(
 
       const filter = new Gtk.FileFilter();
       filter.set_name("Extension Metadata");
-      filter.add_pattern("metadata.json");
+      filter.add_pattern("metadata.json"); // Simpler way to pick a valid extension
       fileChooser.add_filter(filter);
 
       const errorMessage = new Gtk.Label({
@@ -72,9 +72,13 @@ var HelloWorldSettings = GObject.registerClass(
                   <span><tt>User extension Path: ${USER_INSTALLATION_PATH}</tt></span>
                 </span>`
             );
+            Utils.log(
+              `Selected path(${new_path}) is inside installation path(${USER_INSTALLATION_PATH})`
+            );
           } else {
             logoPicker.label = new_path;
             settings.set_string("extension-metadata-path", new_path);
+            Utils.log(`New Extension selected: ${new_path}`);
           }
         }
         dlg.hide();
@@ -84,6 +88,45 @@ var HelloWorldSettings = GObject.registerClass(
         fileChooser.transient_for = this.get_root();
         fileChooser.show();
       });
+
+      this.append(
+        new Gtk.Label({
+          useMarkup: true,
+          label: "<b>Latest Extension Logs</b>",
+          halign: Gtk.Align.START,
+          hexpand: true,
+        })
+      );
+      const scrolledwindow = new Gtk.ScrolledWindow({
+        min_content_height: 500,
+      });
+      scrolledwindow.set_policy(
+        Gtk.PolicyType.AUTOMATIC,
+        Gtk.PolicyType.AUTOMATIC
+      );
+      this.append(scrolledwindow);
+
+      // Logview
+      const logView = new Gtk.TextView({
+        editable: false,
+        monospace: true,
+      });
+
+      scrolledwindow.set_child(logView);
+
+      const logViewBuffer = logView.get_buffer();
+      let [, stdout] = GLib.spawn_sync(
+        null,
+        [
+          "/bin/bash",
+          "-c",
+          'journalctl --since "60 minutes ago" --output=cat --no-pager | grep "_EXTENSION_RELOADER_"',
+        ],
+        null,
+        GLib.SpawnFlags.SEARCH_PATH,
+        null
+      );
+      logViewBuffer.set_text(ByteArray.toString(stdout), -1);
     }
   }
 );

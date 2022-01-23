@@ -25,12 +25,14 @@ const Shell = imports.gi.Shell;
 
 const GLib = imports.gi.GLib;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils.Utils;
 const { ExtensionType } = ExtensionUtils;
 
 let myPopup;
 
 function execCMD(args) {
-  log(">>>>>> RUNNING CMD: " + JSON.stringify(args));
+  Utils.log(">>>>>> RUNNING CMD: " + JSON.stringify(args));
   let [ok, stdout, stderr, status] = GLib.spawn_sync(
     null,
     args,
@@ -38,10 +40,10 @@ function execCMD(args) {
     null,
     null
   );
-  log(">>>>>> OK?: " + ok);
-  log(">>>>>> STDOUT: " + stdout);
-  log(">>>>>> STDERR: " + stderr);
-  log(">>>>>> STATUS: " + status);
+  Utils.log(">>>>>> OK?: " + ok);
+  Utils.log(">>>>>> STDOUT: " + stdout);
+  Utils.log(">>>>>> STDERR: " + stderr);
+  Utils.log(">>>>>> STATUS: " + status);
 }
 
 function getNewestUUIDFromSettings() {
@@ -134,14 +136,16 @@ function installEphimeralExtension() {
     );
   } catch (e) {
     let extension = Main.extensionManager.lookup(ephUUID);
-    if (extension) Main.extensionManager.unloadExtension(extension);
-    throw new Error(
-      "Error while installing %s: %s (%s)".format(
-        ephUUID,
-        "LoadExtensionError",
-        e
-      )
+    if (extension) {
+      Main.extensionManager.unloadExtension(extension);
+    }
+    const error_message = "Error while installing %s: %s (%s)".format(
+      ephUUID,
+      "LoadExtensionError",
+      e
     );
+    Utils.log(error_message);
+    throw new Error(error_message);
   }
 }
 
@@ -154,6 +158,7 @@ const MyPopup = GObject.registerClass(
   class MyPopup extends PanelMenu.Button {
     _init() {
       super._init(0);
+      Utils.log("Starting Extension\na\nb");
 
       const settings = ExtensionUtils.getSettings(
         "org.gnome.shell.extensions.ExtensionReloader"
