@@ -21,20 +21,9 @@ const HelloWorldSettings = GObject.registerClass(
       );
       Utils.log("Opening preferences");
 
-      const extensionWebsite = Me.metadata.url;
       this.append(
         new Gtk.Label({
-          useMarkup: true,
-          label: `<b>Source Code and additional Documentation on: 
-            <a href='${extensionWebsite}'>${extensionWebsite}</a>
-          </b>`,
-        })
-      );
-
-      this.append(
-        new Gtk.Label({
-          label:
-            "File path of your extension's metadata. It should be outside the installation path",
+          label: "Please select your extension's metadata",
           halign: Gtk.Align.START,
           hexpand: true,
         })
@@ -97,10 +86,41 @@ const HelloWorldSettings = GObject.registerClass(
         fileChooser.show();
       });
 
+      // Instructions
+      const extensionWebsite = Me.metadata.url;
       this.append(
         new Gtk.Label({
           useMarkup: true,
-          label: "<b>Latest Extension Logs</b>",
+          label: `
+          
+          
+<u><big>ADDITIONAL INFORMATION AND LOGS </big></u>
+
+<b>SOURCE CODE: </b> <a href='${extensionWebsite}'>${extensionWebsite}</a>
+
+
+<b>REQUIREMENTS</b>
+If you're using GObject.registerClass on prefs.js, please use random class names(e.g. Timestamps).
+e.g.
+<tt>
+const HelloWorldSettings = GObject.registerClass(
+  { GTypeName: "Gjs_HelloWorldSettings" + Date.now() },
+  class HelloWorldSettings extends Gtk.ListBox {
+  ...
+  }
+);
+          </tt>
+          Otherwise, you may get <tt>Error: Type name Gjs_HelloWorldSettings is already registered</tt>
+
+`,
+        })
+      );
+
+      // Logview
+      this.append(
+        new Gtk.Label({
+          useMarkup: true,
+          label: "<b>RECENT EXTENSION LOGS</b>",
           halign: Gtk.Align.START,
           hexpand: true,
         })
@@ -114,7 +134,6 @@ const HelloWorldSettings = GObject.registerClass(
       );
       this.append(scrolledwindow);
 
-      // Logview
       const logView = new Gtk.TextView({
         editable: false,
         monospace: true,
@@ -144,5 +163,5 @@ function init() {}
 
 // eslint-disable-next-line no-unused-vars
 function buildPrefsWidget() {
-  return new HelloWorldSettings();
+  return new HelloWorldSettings({ selection_mode: Gtk.SelectionMode.NONE });
 }
