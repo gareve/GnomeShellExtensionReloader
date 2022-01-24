@@ -10,6 +10,7 @@ const USER_INSTALLATION_PATH = GLib.build_filenamev([
   "gnome-shell",
   "extensions",
 ]);
+const gtkVersion = Gtk.get_major_version();
 
 const HelloWorldSettings = GObject.registerClass(
   { GTypeName: "Gjs_HelloWorldSettings" },
@@ -19,7 +20,7 @@ const HelloWorldSettings = GObject.registerClass(
       const settings = ExtensionUtils.getSettings(
         "org.gnome.shell.extensions.ExtensionReloader"
       );
-      Utils.log("Opening preferences");
+      Utils.log(`Opening preferences(GTK ${gtkVersion})`);
 
       this.append(
         new Gtk.Label({
