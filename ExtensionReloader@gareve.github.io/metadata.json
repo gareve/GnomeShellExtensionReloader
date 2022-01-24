@@ -1,6 +1,6 @@
 {
     "name" : "ExtensionReloader",
-    "description" : "Extension Reloader",
+    "description" : "A one-click reload of Gnome Shell Extensions on Wayland",
     "shell-version" : [
         "40",
         "41"

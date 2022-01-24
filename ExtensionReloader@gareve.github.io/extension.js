@@ -272,5 +272,7 @@ function enable() {
 // eslint-disable-next-line no-unused-vars
 function disable() {
   Main.wm.removeKeybinding("reload-extension-hotkey");
-  myPopup.destroy();
+  if (myPopup) {
+    myPopup.destroy();
+  }
 }
